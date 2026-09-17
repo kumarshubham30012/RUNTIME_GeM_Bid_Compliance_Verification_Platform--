@@ -97,6 +97,57 @@ export function findOfficerTender(tenderId: number, officerId: number): TenderRe
   return row ? mapTender(row) : null;
 }
 
+export type PublicTender = {
+  id: number;
+  title: string;
+  department: string;
+  openingDate: string;
+  closingDate: string;
+  status: TenderStatus;
+};
+
+function toPublicTender(tender: TenderRecord): PublicTender {
+  return {
+    id: tender.id,
+    title: tender.title,
+    department: tender.department,
+    openingDate: tender.openingDate,
+    closingDate: tender.closingDate,
+    status: tender.status,
+  };
+}
+
+export function listDatedTenders(): PublicTender[] {
+  const rows = getDb()
+    .prepare(
+      `${tenderSelect}
+       WHERE t.opening_date IS NOT NULL
+         AND t.closing_date IS NOT NULL
+       ORDER BY t.created_at DESC, t.id DESC`
+    )
+    .all() as TenderRow[];
+
+  return rows.map(mapTender).map(toPublicTender);
+}
+
+export function findDatedTender(tenderId: number): PublicTender | null {
+  const row = getDb()
+    .prepare(
+      `${tenderSelect}
+       WHERE t.id = ?
+         AND t.opening_date IS NOT NULL
+         AND t.closing_date IS NOT NULL
+       LIMIT 1`
+    )
+    .get(tenderId) as TenderRow | undefined;
+
+  return row ? toPublicTender(mapTender(row)) : null;
+}
+
+export function listOpenTenders(): PublicTender[] {
+  return listDatedTenders().filter((tender) => tender.status === "open");
+}
+
 export function createOfficerTender(input: {
   title: string;
   department: string;

@@ -1,6 +1,8 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext.tsx";
 import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute.tsx";
+import { BidderApplicationPage } from "./pages/BidderApplicationPage.tsx";
+import { BidderDashboardPage } from "./pages/BidderDashboardPage.tsx";
 import { CreateTenderPage } from "./pages/CreateTenderPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { HomeRedirect } from "./pages/HomeRedirect.tsx";
@@ -26,7 +28,15 @@ export default function App() {
             path="/bidder"
             element={
               <ProtectedRoute role="bidder">
-                <DashboardPage role="bidder" />
+                <BidderDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bidder/applications/:applicationId"
+            element={
+              <ProtectedRoute role="bidder">
+                <BidderApplicationPage />
               </ProtectedRoute>
             }
           />

@@ -49,7 +49,21 @@ CREATE TABLE IF NOT EXISTS bidders (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS applications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tender_id INTEGER NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
+  bidder_user_id INTEGER NOT NULL REFERENCES users(id),
+  status TEXT NOT NULL DEFAULT 'DRAFT',
+  gstin TEXT NOT NULL DEFAULT '',
+  pan TEXT NOT NULL DEFAULT '',
+  oem TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (tender_id, bidder_user_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_tenders_created_by_user_id ON tenders(created_by_user_id);
 CREATE INDEX IF NOT EXISTS idx_tender_requirements_tender_id ON tender_requirements(tender_id);
 CREATE INDEX IF NOT EXISTS idx_bidders_tender_id ON bidders(tender_id);
+CREATE INDEX IF NOT EXISTS idx_applications_bidder_user_id ON applications(bidder_user_id);

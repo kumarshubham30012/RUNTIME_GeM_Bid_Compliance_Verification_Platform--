@@ -6,7 +6,9 @@ Phase 2 adds multi-role authentication (bidder, officer, admin), JWT-protected A
 
 Phase 3 adds officer-side tender management: create tenders, list the officer's tenders, view tender details, and display a date-derived status.
 
-Phase 4 adds an officer requirement builder on each owned tender: name, tender clause, mandatory/optional, verification method, and rule type. Bidder-facing tender browsing is not implemented yet.
+Phase 4 adds an officer requirement builder on each owned tender: name, tender clause, mandatory/optional, verification method, and rule type.
+
+Phase 5 adds bidder open-tender browsing and a DRAFT application with GSTIN, PAN, and OEM. Submission, uploads, and verification are not implemented yet.
 
 ## Prerequisites
 
@@ -62,7 +64,7 @@ npm run db:init
 
 This creates `backend/data/app.db` (or the path in `DATABASE_PATH`) and applies the schema, including the `users` table used for authentication.
 
-Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Those `ALTER TABLE` steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
+Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
 
 ```bash
 npm run db:migrate
@@ -141,6 +143,11 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `GET` | `/api/bidder/me` | Bidder role | Bidder identity probe |
 | `GET` | `/api/officer/me` | Officer role | Officer identity probe |
 | `GET` | `/api/admin/me` | Admin role | Admin identity probe |
+| `GET` | `/api/bidder/tenders` | Bidder role | List open tenders and the bidder's draft status |
+| `GET` | `/api/bidder/tenders/:tenderId` | Bidder role | Open tender detail and read-only requirements |
+| `POST` | `/api/bidder/tenders/:tenderId/application` | Bidder role | Create or return the bidder's DRAFT application |
+| `GET` | `/api/bidder/applications/:applicationId` | Bidder role | Get the bidder's own application |
+| `PATCH` | `/api/bidder/applications/:applicationId` | Bidder role | Save GSTIN, PAN, and OEM on a DRAFT |
 | `GET` | `/api/tenders` | Officer role | List tenders created by the authenticated officer |
 | `POST` | `/api/tenders` | Officer role | Create a tender for the authenticated officer |
 | `GET` | `/api/tenders/:id` | Officer role | Get one of the officer's tenders |
@@ -262,7 +269,24 @@ curl -sS -X POST http://localhost:3001/api/tenders/$TENDER_ID/requirements \
   -d '{"name":"GST Registration","tenderClause":"Bidder must provide a valid GST registration certificate.","mandatory":true,"verificationMethod":"GST","ruleType":"EXISTS"}'
 ```
 
+## Bidder applications (Phase 5)
 
+Authenticated bidders can list **open** tenders (status derived from `YYYY-MM-DD` opening/closing dates), start a DRAFT application, and save company details.
+
+- One application per bidder per tender (`UNIQUE(tender_id, bidder_user_id)`)
+- `POST .../application` is idempotent: an existing draft is returned instead of creating a second row
+- Identity comes from the JWT; `bidder_user_id` is not accepted from the client
+- GSTIN, PAN, and OEM are stored as trimmed strings. There is no government API check in Phase 5
+- Phase 4 officer requirement APIs stay officer-only. Bidders may see requirements read-only on `GET /api/bidder/tenders/:tenderId`
+
+Phase 5 does **not** implement submit, document uploads, OCR, AI, verification providers, or PASS/FAIL.
+
+Frontend routes:
+
+| Path | Access |
+| --- | --- |
+| `/bidder` | Open tenders |
+| `/bidder/applications/:applicationId` | Draft application |
 
 ### Role authorization
 
@@ -277,7 +301,8 @@ Frontend route guards only improve UX. API authorization is enforced independent
 | Path | Access |
 | --- | --- |
 | `/login` | Public login page |
-| `/bidder` | Bidder dashboard shell |
+| `/bidder` | Open tenders (bidder) |
+| `/bidder/applications/:applicationId` | Draft application (bidder) |
 | `/officer` | Officer tender list |
 | `/officer/tenders/new` | Create tender (officer) |
 | `/officer/tenders/:id` | Tender details (officer) |
@@ -294,7 +319,8 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── auth/          # JWT, middleware, roles
 │   │   ├── config/        # environment configuration
 │   │   ├── db/            # SQLite client, schema, seed
-│   │   ├── routes/        # health, auth, role probes, tenders, requirements
+│   │   ├── applications/  # bidder application drafts
+│   │   ├── routes/        # health, auth, bidder, tenders, requirements
 │   │   ├── tenders/       # tender repository and status
 │   │   ├── requirements/  # requirement constants and repository
 │   │   ├── users/         # user repository
