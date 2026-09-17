@@ -9,6 +9,7 @@ import { HomeRedirect } from "./pages/HomeRedirect.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { OfficerApplicationDetailPage } from "./pages/OfficerApplicationDetailPage.tsx";
 import { OfficerTenderListPage } from "./pages/OfficerTenderListPage.tsx";
+import { OfficerTenderComparisonPage } from "./pages/OfficerTenderComparisonPage.tsx";
 import { TenderDetailPage } from "./pages/TenderDetailPage.tsx";
 
 export default function App() {
@@ -62,6 +63,14 @@ export default function App() {
             element={
               <ProtectedRoute role="officer">
                 <TenderDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/officer/tenders/:id/comparison"
+            element={
+              <ProtectedRoute role="officer">
+                <OfficerTenderComparisonPage />
               </ProtectedRoute>
             }
           />
