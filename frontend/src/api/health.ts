@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+import { API_BASE_URL, ApiError } from "./client.ts";
 
 export type HealthResponse = {
   status: string;
@@ -7,7 +7,12 @@ export type HealthResponse = {
 };
 
 export async function fetchBackendHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/health`);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/health`);
+  } catch {
+    throw new ApiError(0, "Backend unavailable");
+  }
 
   if (!response.ok) {
     throw new Error(`Health check failed with status ${response.status}`);

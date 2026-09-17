@@ -16,4 +16,6 @@ export const env = {
   port: Number(required("PORT", "3001")),
   frontendOrigin: required("FRONTEND_ORIGIN", "http://localhost:5173"),
   databasePath: required("DATABASE_PATH", "./data/app.db"),
+  jwtSecret: required("JWT_SECRET"),
+  jwtExpiresIn: required("JWT_EXPIRES_IN", "8h"),
 };
