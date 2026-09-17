@@ -15,6 +15,7 @@ import { EntityResolutionCenter } from "../components/EntityResolutionCenter.tsx
 import { ComplianceResults } from "../components/ComplianceResults.tsx";
 import { EvidenceFindings } from "../components/EvidenceFindings.tsx";
 import { OfficerComplianceReport } from "../components/OfficerComplianceReport.tsx";
+import { OfficerResolutionGuidance } from "../components/OfficerResolutionGuidance.tsx";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
@@ -284,6 +285,7 @@ export function OfficerApplicationDetailPage() {
           <OfficerComplianceReport token={state.token} applicationId={detail.application.id} />
           <ComplianceResults token={state.token} applicationId={detail.application.id} />
           <EvidenceFindings token={state.token} applicationId={detail.application.id} />
+          <OfficerResolutionGuidance token={state.token} applicationId={detail.application.id} />
         </>
       ) : null}
     </AppShell>

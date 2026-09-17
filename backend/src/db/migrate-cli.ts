@@ -28,6 +28,12 @@ const complianceColumns = db
 const evidenceColumns = db
   .prepare(`PRAGMA table_info(evidence_findings)`)
   .all() as Array<{ name: string }>;
+const resolutionColumns = db
+  .prepare(`PRAGMA table_info(finding_resolutions)`)
+  .all() as Array<{ name: string }>;
+const resolutionHistoryColumns = db
+  .prepare(`PRAGMA table_info(finding_resolution_history)`)
+  .all() as Array<{ name: string }>;
 const userCount = db.prepare(`SELECT COUNT(*) AS count FROM users`).get() as { count: number };
 
 console.log(`SQLite database migrated at: ${db.name}`);
@@ -53,6 +59,12 @@ console.log(
 );
 console.log(
   `Evidence columns: ${evidenceColumns.map((column) => column.name).join(", ") || "(missing)"}`
+);
+console.log(
+  `Resolution columns: ${resolutionColumns.map((column) => column.name).join(", ") || "(missing)"}`
+);
+console.log(
+  `Resolution history columns: ${resolutionHistoryColumns.map((column) => column.name).join(", ") || "(missing)"}`
 );
 console.log(`Existing users preserved: ${userCount.count}`);
 

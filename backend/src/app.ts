@@ -12,6 +12,7 @@ import { entityResolutionRouter } from "./routes/entityResolution";
 import { complianceRouter } from "./routes/compliance";
 import { evidenceRouter } from "./routes/evidence";
 import { comparisonRouter } from "./routes/comparison";
+import { resolutionRouter } from "./routes/resolution";
 import { sendError } from "./http/errors";
 
 export function createApp() {
@@ -30,6 +31,7 @@ export function createApp() {
   app.use("/api/officer", createRoleMeRouter("officer"));
   app.use("/api/officer", officerApplicationsRouter);
   app.use("/api/officer", comparisonRouter);
+  app.use("/api/officer", resolutionRouter);
   app.use("/api/admin", createRoleMeRouter("admin"));
   app.use("/api/tenders", tendersRouter);
   app.use("/api/verification", verificationRouter);
