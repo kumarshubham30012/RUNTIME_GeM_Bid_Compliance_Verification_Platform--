@@ -100,3 +100,21 @@ CREATE TABLE IF NOT EXISTS verification_results (
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_results_application_id ON verification_results(application_id);
+
+CREATE TABLE IF NOT EXISTS entity_resolution_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  field_name TEXT NOT NULL,
+  source_a TEXT NOT NULL,
+  value_a TEXT NOT NULL DEFAULT '',
+  source_b TEXT NOT NULL,
+  value_b TEXT NOT NULL DEFAULT '',
+  classification TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  reasoning TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (application_id, field_name, source_a, source_b)
+);
+
+CREATE INDEX IF NOT EXISTS idx_entity_resolution_results_application_id ON entity_resolution_results(application_id);

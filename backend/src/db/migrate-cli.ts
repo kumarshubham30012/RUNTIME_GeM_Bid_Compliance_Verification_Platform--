@@ -19,6 +19,9 @@ const documentColumns = db
 const verificationColumns = db
   .prepare(`PRAGMA table_info(verification_results)`)
   .all() as Array<{ name: string }>;
+const entityResolutionColumns = db
+  .prepare(`PRAGMA table_info(entity_resolution_results)`)
+  .all() as Array<{ name: string }>;
 const userCount = db.prepare(`SELECT COUNT(*) AS count FROM users`).get() as { count: number };
 
 console.log(`SQLite database migrated at: ${db.name}`);
@@ -35,6 +38,9 @@ console.log(
 );
 console.log(
   `Verification columns: ${verificationColumns.map((column) => column.name).join(", ") || "(missing)"}`
+);
+console.log(
+  `Entity resolution columns: ${entityResolutionColumns.map((column) => column.name).join(", ") || "(missing)"}`
 );
 console.log(`Existing users preserved: ${userCount.count}`);
 

@@ -11,6 +11,8 @@ export const UNKNOWN_UDYAM = "UDYAM-UNKNOWN-99-9999999";
 
 export const DEMO_OEM = "Sandbox Medical Devices";
 export const UNKNOWN_OEM = "Unknown Widget Works";
+/** Additional fictional OEM used for Phase 9 mismatch demonstrations. */
+export const DEMO_OEM_MISMATCH = "Different Medical Devices Pvt Ltd";
 
 export type DemoGstRecord = {
   gstin: string;
@@ -54,6 +56,11 @@ const OEM_RECORDS: Record<string, DemoOemRecord> = {
   [DEMO_OEM.toLowerCase()]: {
     oemName: DEMO_OEM,
     manufacturerCode: "OEM-SANDBOX-001",
+    authorizationStatus: "LISTED (DEMO)",
+  },
+  [DEMO_OEM_MISMATCH.toLowerCase()]: {
+    oemName: DEMO_OEM_MISMATCH,
+    manufacturerCode: "OEM-SANDBOX-002",
     authorizationStatus: "LISTED (DEMO)",
   },
 };

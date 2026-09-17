@@ -17,6 +17,7 @@ import { useAuth } from "../auth/AuthContext.tsx";
 import { AppShell } from "../components/AppShell.tsx";
 import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
 import { VerificationCenter } from "../components/VerificationCenter.tsx";
+import { EntityResolutionCenter } from "../components/EntityResolutionCenter.tsx";
 
 export function BidderApplicationPage() {
   const { applicationId } = useParams();
@@ -369,11 +370,14 @@ export function BidderApplicationPage() {
       ) : null}
 
       {application && state.status === "authenticated" ? (
-        <VerificationCenter
-          token={state.token}
-          applicationId={application.id}
-          requirements={requirements}
-        />
+        <>
+          <VerificationCenter
+            token={state.token}
+            applicationId={application.id}
+            requirements={requirements}
+          />
+          <EntityResolutionCenter token={state.token} applicationId={application.id} />
+        </>
       ) : null}
 
       {application ? (

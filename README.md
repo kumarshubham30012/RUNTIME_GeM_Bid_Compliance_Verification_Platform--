@@ -16,6 +16,8 @@ Phase 7 adds an officer application review workspace: officers can list applicat
 
 Phase 8 adds a SANDBOX verification center with local demo providers (GST, Udyam, OEM, document presence, and manual). It does not call government APIs and does not produce tender PASS/FAIL.
 
+Phase 9 compares application and sandbox-verification values (entity resolution). It classifies relationships such as Exact Match or Possible Mismatch. It does not decide tender compliance.
+
 ## Prerequisites
 
 - Node.js 20 or later
@@ -71,7 +73,7 @@ npm run db:init
 
 This creates `backend/data/app.db` (or the path in `DATABASE_PATH`) and applies the schema, including the `users` table used for authentication.
 
-Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Phase 6 adds `application_documents` if it is missing. Phase 8 adds `applications.udyam` if missing and `verification_results` if missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
+Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Phase 6 adds `application_documents` if it is missing. Phase 8 adds `applications.udyam` if missing and `verification_results` if missing. Phase 9 adds `entity_resolution_results` if missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
 
 ```bash
 npm run db:migrate
@@ -167,6 +169,8 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `DELETE` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Delete a requirement on an owned tender |
 | `GET` | `/api/verification/applications/:applicationId` | Bidder or officer | List persisted SANDBOX verification results for an owned application |
 | `POST` | `/api/verification/applications/:applicationId` | Bidder or officer | Run the sandbox provider for one requirement (`requirementId`) |
+| `GET` | `/api/entity-resolution/applications/:applicationId` | Bidder or officer | List persisted entity-resolution comparisons |
+| `POST` | `/api/entity-resolution/applications/:applicationId/run` | Bidder or officer | Compare application and sandbox-verification values |
 
 Send the token as:
 
@@ -361,6 +365,26 @@ Unknown values return `NOT_FOUND`. Empty GSTIN/OEM/Udyam or no uploaded document
 
 Ownership: a bidder can only verify their own application; an officer can only verify applications on tenders they created. Admins receive `403`. Unauthenticated requests receive `401`.
 
+## Entity resolution (Phase 9)
+
+Phase 9 compares values across the application and SANDBOX verification results. Phase 7 does not extract fields from documents, so document extraction is treated as absent (`INSUFFICIENT_EVIDENCE` is used only when a comparison is attempted with a missing value).
+
+Classifications:
+
+- Exact Match
+- Likely Same Entity (legal suffix / formatting, such as Pvt Ltd vs Private Limited)
+- Possible Mismatch
+- Strong Mismatch (used for identifier fields such as GSTIN/PAN/Udyam when both values exist and differ)
+- Insufficient Evidence
+
+Formatting tests such as `ABC   Technologies PVT. LTD.` vs `abc technologies private limited` are classified as **Likely Same Entity** because the originals differ even though the normalized core name matches.
+
+GSTIN mismatches are **Strong Mismatch** because those identifiers are unique. Distinct company names such as Sandbox Supplies vs Different Medical Devices are **Possible Mismatch**, not a compliance failure.
+
+A fictional OEM registry entry `Different Medical Devices Pvt Ltd` exists only to demonstrate GST vs OEM name comparison. Existing Phase 8 OEM `Sandbox Medical Devices` is unchanged.
+
+Phase 9 does **not** produce PASS/FAIL or run a rules engine.
+
 ### Role authorization
 
 `requireAuth` verifies the JWT and loads the user from the database.
@@ -396,6 +420,7 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── applications/  # bidder drafts and officer review queries
 │   │   ├── documents/     # upload metadata and submission gate
 │   │   ├── verification/  # sandbox providers, demo registry, results
+│   │   ├── entityResolution/ # cross-source comparison
 │   │   ├── routes/        # health, auth, bidder, officer applications, tenders, requirements, verification
 │   │   ├── tenders/       # tender repository and status
 │   │   ├── requirements/  # requirement constants and repository
@@ -429,6 +454,7 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 | `npm run db:init` | Initialize the SQLite database |
 | `npm run db:migrate` | Apply safe SQLite schema updates without dropping data |
 | `npm run db:seed` | Seed demo users (development/testing) |
+| `npm test` | Run Phase 9 entity-resolution unit tests |
 | `npm run dev:backend` | Start the backend in watch mode |
 | `npm run dev:frontend` | Start the frontend development server |
 | `npm run build:backend` | Compile the backend TypeScript |

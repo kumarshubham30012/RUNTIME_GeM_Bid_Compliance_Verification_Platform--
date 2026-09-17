@@ -11,6 +11,7 @@ import { useAuth } from "../auth/AuthContext.tsx";
 import { AppShell } from "../components/AppShell.tsx";
 import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
 import { VerificationCenter } from "../components/VerificationCenter.tsx";
+import { EntityResolutionCenter } from "../components/EntityResolutionCenter.tsx";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
@@ -276,6 +277,7 @@ export function OfficerApplicationDetailPage() {
             applicationId={detail.application.id}
             requirements={detail.requirements}
           />
+          <EntityResolutionCenter token={state.token} applicationId={detail.application.id} />
         </>
       ) : null}
     </AppShell>
