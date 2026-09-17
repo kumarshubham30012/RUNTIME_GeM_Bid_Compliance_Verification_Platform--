@@ -77,6 +77,33 @@ export function lookupDemoGst(gstin: string): DemoGstRecord | null {
   return GST_RECORDS[normalizeGstin(gstin)] ?? null;
 }
 
+export function listDemoGstRecords(): DemoGstRecord[] {
+  return Object.values(GST_RECORDS).sort((left, right) => left.gstin.localeCompare(right.gstin));
+}
+
+export function updateDemoGstRecord(
+  gstin: string,
+  fields: { legalName?: string; registrationStatus?: string; state?: string }
+): DemoGstRecord | null {
+  const key = normalizeGstin(gstin);
+  const existing = GST_RECORDS[key];
+  if (!existing) {
+    return null;
+  }
+
+  if (typeof fields.legalName === "string" && fields.legalName.trim()) {
+    existing.legalName = fields.legalName.trim();
+  }
+  if (typeof fields.registrationStatus === "string" && fields.registrationStatus.trim()) {
+    existing.registrationStatus = fields.registrationStatus.trim();
+  }
+  if (typeof fields.state === "string" && fields.state.trim()) {
+    existing.state = fields.state.trim();
+  }
+
+  return { ...existing };
+}
+
 export function lookupDemoUdyam(udyam: string): DemoUdyamRecord | null {
   return UDYAM_RECORDS[normalizeUdyam(udyam)] ?? null;
 }

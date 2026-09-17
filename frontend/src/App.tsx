@@ -4,7 +4,7 @@ import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute.tsx";
 import { BidderApplicationPage } from "./pages/BidderApplicationPage.tsx";
 import { BidderDashboardPage } from "./pages/BidderDashboardPage.tsx";
 import { CreateTenderPage } from "./pages/CreateTenderPage.tsx";
-import { DashboardPage } from "./pages/DashboardPage.tsx";
+import { AdminControlPanelPage } from "./pages/AdminControlPanelPage.tsx";
 import { HomeRedirect } from "./pages/HomeRedirect.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { OfficerApplicationDetailPage } from "./pages/OfficerApplicationDetailPage.tsx";
@@ -86,7 +86,7 @@ export default function App() {
             path="/admin"
             element={
               <ProtectedRoute role="admin">
-                <DashboardPage role="admin" />
+                <AdminControlPanelPage />
               </ProtectedRoute>
             }
           />

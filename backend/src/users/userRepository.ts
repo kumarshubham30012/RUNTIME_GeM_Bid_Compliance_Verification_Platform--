@@ -75,3 +75,38 @@ export function upsertDemoUser(input: {
       role: input.role,
     });
 }
+
+export function listUsers(): PublicUser[] {
+  const rows = getDb()
+    .prepare(`SELECT ${userColumns} FROM users ORDER BY role ASC, full_name ASC, id ASC`)
+    .all() as UserRow[];
+
+  return rows.map(mapUser).filter((user): user is UserRecord => user !== null).map(toPublicUser);
+}
+
+export function createStaffUser(input: {
+  email: string;
+  passwordHash: string;
+  fullName: string;
+  role: "officer" | "admin";
+}): PublicUser {
+  const result = getDb()
+    .prepare(
+      `INSERT INTO users (email, password_hash, full_name, role)
+       VALUES (?, ?, ?, ?)`
+    )
+    .run(input.email, input.passwordHash, input.fullName, input.role);
+
+  const created = findUserById(Number(result.lastInsertRowid));
+  if (!created) {
+    throw new Error("Failed to load created user");
+  }
+  return toPublicUser(created);
+}
+
+export function deleteStaffUser(userId: number): boolean {
+  const result = getDb()
+    .prepare(`DELETE FROM users WHERE id = ? AND role IN ('officer', 'admin')`)
+    .run(userId);
+  return result.changes > 0;
+}

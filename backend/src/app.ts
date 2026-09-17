@@ -13,6 +13,8 @@ import { complianceRouter } from "./routes/compliance";
 import { evidenceRouter } from "./routes/evidence";
 import { comparisonRouter } from "./routes/comparison";
 import { resolutionRouter } from "./routes/resolution";
+import { decisionRouter } from "./routes/decision";
+import { adminRouter } from "./routes/admin";
 import { sendError } from "./http/errors";
 
 export function createApp() {
@@ -32,7 +34,9 @@ export function createApp() {
   app.use("/api/officer", officerApplicationsRouter);
   app.use("/api/officer", comparisonRouter);
   app.use("/api/officer", resolutionRouter);
+  app.use("/api/officer", decisionRouter);
   app.use("/api/admin", createRoleMeRouter("admin"));
+  app.use("/api/admin", adminRouter);
   app.use("/api/tenders", tendersRouter);
   app.use("/api/verification", verificationRouter);
   app.use("/api/entity-resolution", entityResolutionRouter);

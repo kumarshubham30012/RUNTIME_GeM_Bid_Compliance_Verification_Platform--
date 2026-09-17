@@ -200,4 +200,33 @@ export function applySafeMigrations(db: Database.Database): void {
   }
 
   db.exec(`CREATE INDEX IF NOT EXISTS idx_finding_resolution_history_finding_id ON finding_resolution_history(finding_id)`);
+
+  if (!hasTable(db, "officer_decisions")) {
+    db.exec(`
+      CREATE TABLE officer_decisions (
+        application_id INTEGER PRIMARY KEY REFERENCES applications(id) ON DELETE CASCADE,
+        officer_user_id INTEGER NOT NULL REFERENCES users(id),
+        decision TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        decided_at TEXT NOT NULL DEFAULT (datetime('now')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  }
+
+  if (!hasTable(db, "officer_decision_history")) {
+    db.exec(`
+      CREATE TABLE officer_decision_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+        officer_user_id INTEGER NOT NULL REFERENCES users(id),
+        decision TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  }
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_officer_decision_history_application_id ON officer_decision_history(application_id)`);
 }
