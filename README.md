@@ -12,6 +12,8 @@ Phase 5 adds bidder open-tender browsing and a DRAFT application with GSTIN, PAN
 
 Phase 6 adds local document upload, a mandatory-document completeness gate, and DRAFT → SUBMITTED. It does not verify documents.
 
+Phase 7 adds an officer application review workspace: officers can list applications on their own tenders, inspect submitted company details and requirement documents, and download those files through an authenticated API. It does not verify documents or produce PASS/FAIL.
+
 ## Prerequisites
 
 - Node.js 20 or later
@@ -154,6 +156,9 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `GET` | `/api/tenders` | Officer role | List tenders created by the authenticated officer |
 | `POST` | `/api/tenders` | Officer role | Create a tender for the authenticated officer |
 | `GET` | `/api/tenders/:id` | Officer role | Get one of the officer's tenders |
+| `GET` | `/api/officer/applications` | Officer role | List applications on tenders created by the officer |
+| `GET` | `/api/officer/applications/:applicationId` | Officer role | Review one owned application (tender, bidder, requirements, document metadata) |
+| `GET` | `/api/officer/applications/:applicationId/documents/:documentId` | Officer role | Authenticated download of a document on an owned application |
 | `GET` | `/api/tenders/:id/requirements` | Officer role | List requirements for an owned tender |
 | `POST` | `/api/tenders/:id/requirements` | Officer role | Create a requirement for an owned tender |
 | `PATCH` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Update a requirement on an owned tender |
@@ -310,6 +315,22 @@ Bidders can attach documents to a DRAFT application against Phase 4 requirements
 | `GET` | `/api/bidder/applications/:applicationId/submission-status` | Bidder |
 | `POST` | `/api/bidder/applications/:applicationId/submit` | Bidder |
 
+## Officer application review (Phase 7)
+
+Officers inspect applications that belong to tenders they created (`application → tender → created_by_user_id`). Ownership is enforced on the server. Bidders and admins receive `403` on these officer endpoints. Cross-officer access returns `404 Application not found`.
+
+- Document downloads require JWT + officer role. Files are looked up in SQLite and served from local storage. `backend/uploads` is not a public static directory.
+- The API returns document metadata (`original_filename`, `mime_type`, `file_size`) and never returns `storage_path` or `stored_filename`.
+- Requirements with no files are still listed (`documents: []`). Missing files are informational only; Phase 7 does **not** run OCR, AI, rules, or PASS/FAIL.
+- Application status remains `DRAFT` or `SUBMITTED`. There is no approval/rejection workflow.
+
+Frontend:
+
+| Path | Access |
+| --- | --- |
+| `/officer` | Tender list plus Applications / Bid Reviews |
+| `/officer/applications/:applicationId` | Application review |
+
 ### Role authorization
 
 `requireAuth` verifies the JWT and loads the user from the database.
@@ -325,9 +346,10 @@ Frontend route guards only improve UX. API authorization is enforced independent
 | `/login` | Public login page |
 | `/bidder` | Open tenders (bidder) |
 | `/bidder/applications/:applicationId` | Draft application (bidder) |
-| `/officer` | Officer tender list |
+| `/officer` | Officer tender list and application reviews |
 | `/officer/tenders/new` | Create tender (officer) |
 | `/officer/tenders/:id` | Tender details (officer) |
+| `/officer/applications/:applicationId` | Application review (officer) |
 | `/admin` | Admin dashboard shell |
 
 Unauthenticated users are redirected to `/login`. An authenticated user who opens another role's dashboard is redirected to their own dashboard. Logout clears the stored token and returns to login.
@@ -341,9 +363,9 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── auth/          # JWT, middleware, roles
 │   │   ├── config/        # environment configuration
 │   │   ├── db/            # SQLite client, schema, seed
-│   │   ├── applications/  # bidder application drafts
+│   │   ├── applications/  # bidder drafts and officer review queries
 │   │   ├── documents/     # upload metadata and submission gate
-│   │   ├── routes/        # health, auth, bidder, tenders, requirements
+│   │   ├── routes/        # health, auth, bidder, officer applications, tenders, requirements
 │   │   ├── tenders/       # tender repository and status
 │   │   ├── requirements/  # requirement constants and repository
 │   │   ├── users/         # user repository

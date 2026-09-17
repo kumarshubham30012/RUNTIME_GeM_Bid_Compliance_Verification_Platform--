@@ -36,6 +36,37 @@ export function createStoredFilename(
   return `${applicationId}-${requirementId}-${randomUUID()}${EXTENSION_BY_MIME[mimeType]}`;
 }
 
+export function resolveTrustedStoragePath(storagePath: string): string | null {
+  const uploadDir = resolveUploadDir();
+  const absolutePath = path.isAbsolute(storagePath)
+    ? path.resolve(storagePath)
+    : path.resolve(process.cwd(), storagePath);
+  const relative = path.relative(uploadDir, absolutePath);
+
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return null;
+  }
+
+  return absolutePath;
+}
+
+export function storedFileExists(storagePath: string): boolean {
+  const trustedPath = resolveTrustedStoragePath(storagePath);
+  if (!trustedPath) {
+    return false;
+  }
+
+  try {
+    return fs.statSync(trustedPath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+export function contentDispositionFilename(filename: string): string {
+  return sanitizeOriginalFilename(filename).replace(/["\\]/g, "_");
+}
+
 export function removeStoredFile(storagePath: string): void {
   try {
     fs.unlinkSync(storagePath);

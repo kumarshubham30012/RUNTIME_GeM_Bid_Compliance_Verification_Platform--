@@ -7,6 +7,7 @@ import { CreateTenderPage } from "./pages/CreateTenderPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { HomeRedirect } from "./pages/HomeRedirect.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
+import { OfficerApplicationDetailPage } from "./pages/OfficerApplicationDetailPage.tsx";
 import { OfficerTenderListPage } from "./pages/OfficerTenderListPage.tsx";
 import { TenderDetailPage } from "./pages/TenderDetailPage.tsx";
 
@@ -61,6 +62,14 @@ export default function App() {
             element={
               <ProtectedRoute role="officer">
                 <TenderDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/officer/applications/:applicationId"
+            element={
+              <ProtectedRoute role="officer">
+                <OfficerApplicationDetailPage />
               </ProtectedRoute>
             }
           />
