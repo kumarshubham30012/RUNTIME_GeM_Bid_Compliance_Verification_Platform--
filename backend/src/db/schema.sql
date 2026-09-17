@@ -67,3 +67,19 @@ CREATE INDEX IF NOT EXISTS idx_tenders_created_by_user_id ON tenders(created_by_
 CREATE INDEX IF NOT EXISTS idx_tender_requirements_tender_id ON tender_requirements(tender_id);
 CREATE INDEX IF NOT EXISTS idx_bidders_tender_id ON bidders(tender_id);
 CREATE INDEX IF NOT EXISTS idx_applications_bidder_user_id ON applications(bidder_user_id);
+
+CREATE TABLE IF NOT EXISTS application_documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  requirement_id INTEGER NOT NULL REFERENCES tender_requirements(id) ON DELETE CASCADE,
+  original_filename TEXT NOT NULL,
+  stored_filename TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  file_size INTEGER NOT NULL,
+  storage_path TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_application_documents_application_id ON application_documents(application_id);
+CREATE INDEX IF NOT EXISTS idx_application_documents_requirement_id ON application_documents(requirement_id);

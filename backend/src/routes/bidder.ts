@@ -1,31 +1,22 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../auth/middleware";
-import { sendError } from "../http/errors";
 import {
+  APPLICATION_STATUS_DRAFT,
   createDraftApplication,
   findApplicationByTenderAndBidder,
   findApplicationForBidder,
   updateDraftApplication,
 } from "../applications/applicationRepository";
+import { sendError } from "../http/errors";
+import { parsePositiveInt } from "../http/ids";
 import { listRequirementsForTender } from "../requirements/requirementRepository";
 import { findDatedTender, listOpenTenders } from "../tenders/tenderRepository";
+import { registerBidderDocumentRoutes } from "./bidderDocuments";
 
 export const bidderRouter = Router();
 
 bidderRouter.use(requireAuth, requireRole("bidder"));
-
-function parsePositiveInt(value: string | string[] | undefined): number | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null;
-  }
-
-  return parsed;
-}
+registerBidderDocumentRoutes(bidderRouter);
 
 function readOptionalString(body: Record<string, unknown>, key: string): string | undefined | "invalid" {
   if (!(key in body)) {
@@ -162,6 +153,17 @@ bidderRouter.patch("/applications/:applicationId", (req, res) => {
     return;
   }
 
+  const existing = findApplicationForBidder(applicationId, bidderId);
+  if (!existing) {
+    sendError(res, 404, "Application not found");
+    return;
+  }
+
+  if (existing.status !== APPLICATION_STATUS_DRAFT) {
+    sendError(res, 409, "Application has already been submitted");
+    return;
+  }
+
   if (req.body === null || typeof req.body !== "object" || Array.isArray(req.body)) {
     sendError(res, 400, "Invalid request body");
     return;
@@ -188,8 +190,8 @@ bidderRouter.patch("/applications/:applicationId", (req, res) => {
     ...(oem !== undefined ? { oem } : {}),
   });
 
-  if (!application) {
-    sendError(res, 404, "Application not found");
+  if (!application || application.status !== APPLICATION_STATUS_DRAFT) {
+    sendError(res, 409, "Application has already been submitted");
     return;
   }
 

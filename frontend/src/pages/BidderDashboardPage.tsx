@@ -122,7 +122,9 @@ export function BidderDashboardPage() {
                           type="button"
                           onClick={() => handleContinue(tender)}
                         >
-                          Continue Application
+                          {tender.applicationStatus === "SUBMITTED"
+                            ? "View Application"
+                            : "Continue Application"}
                         </button>
                       ) : (
                         <button

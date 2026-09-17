@@ -14,3 +14,5 @@ npm-debug.log*
 *.db-shm
 backend/data/*
 !backend/data/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep

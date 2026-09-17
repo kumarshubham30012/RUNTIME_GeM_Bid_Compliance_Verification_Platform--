@@ -63,4 +63,24 @@ export function applySafeMigrations(db: Database.Database): void {
   }
 
   db.exec(`CREATE INDEX IF NOT EXISTS idx_applications_bidder_user_id ON applications(bidder_user_id)`);
+
+  if (!hasTable(db, "application_documents")) {
+    db.exec(`
+      CREATE TABLE application_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+        requirement_id INTEGER NOT NULL REFERENCES tender_requirements(id) ON DELETE CASCADE,
+        original_filename TEXT NOT NULL,
+        stored_filename TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        storage_path TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  }
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_application_documents_application_id ON application_documents(application_id)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_application_documents_requirement_id ON application_documents(requirement_id)`);
 }

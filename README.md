@@ -8,7 +8,9 @@ Phase 3 adds officer-side tender management: create tenders, list the officer's 
 
 Phase 4 adds an officer requirement builder on each owned tender: name, tender clause, mandatory/optional, verification method, and rule type.
 
-Phase 5 adds bidder open-tender browsing and a DRAFT application with GSTIN, PAN, and OEM. Submission, uploads, and verification are not implemented yet.
+Phase 5 adds bidder open-tender browsing and a DRAFT application with GSTIN, PAN, and OEM.
+
+Phase 6 adds local document upload, a mandatory-document completeness gate, and DRAFT → SUBMITTED. It does not verify documents.
 
 ## Prerequisites
 
@@ -45,6 +47,7 @@ Backend (`backend/.env`):
 | `DATABASE_PATH` | SQLite file path, relative to the backend working directory | `./data/app.db` |
 | `JWT_SECRET` | Secret used to sign and verify authentication tokens | **required, no default** |
 | `JWT_EXPIRES_IN` | JWT lifetime (for example `8h`) | `8h` |
+| `UPLOAD_DIR` | Local directory for uploaded documents, relative to the backend working directory | `./uploads` |
 
 Frontend (`frontend/.env`):
 
@@ -64,7 +67,7 @@ npm run db:init
 
 This creates `backend/data/app.db` (or the path in `DATABASE_PATH`) and applies the schema, including the `users` table used for authentication.
 
-Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
+Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Phase 6 adds `application_documents` if it is missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
 
 ```bash
 npm run db:migrate
@@ -288,6 +291,25 @@ Frontend routes:
 | `/bidder` | Open tenders |
 | `/bidder/applications/:applicationId` | Draft application |
 
+## Document upload and submission (Phase 6)
+
+Bidders can attach documents to a DRAFT application against Phase 4 requirements and submit only when every **mandatory** requirement has at least one file.
+
+- Storage is local (`backend/uploads/`). SQLite stores metadata and the filesystem path; the API never returns that path.
+- Allowed types: PDF, PNG, JPEG. Maximum size: 10 MB.
+- Multiple documents per requirement are allowed. Optional requirements do not block submit.
+- Allowed status change: `DRAFT` → `SUBMITTED`. After submit, company fields and documents are locked.
+- Phase 6 does **not** verify document contents, run OCR/AI, or produce PASS/FAIL.
+
+| Method | Path | Auth |
+| --- | --- | --- |
+| `GET` | `/api/bidder/applications/:applicationId/requirements` | Bidder |
+| `POST` | `/api/bidder/applications/:applicationId/documents` | Bidder (multipart: `requirementId`, `file`) |
+| `GET` | `/api/bidder/applications/:applicationId/documents` | Bidder |
+| `DELETE` | `/api/bidder/applications/:applicationId/documents/:documentId` | Bidder |
+| `GET` | `/api/bidder/applications/:applicationId/submission-status` | Bidder |
+| `POST` | `/api/bidder/applications/:applicationId/submit` | Bidder |
+
 ### Role authorization
 
 `requireAuth` verifies the JWT and loads the user from the database.
@@ -320,6 +342,7 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── config/        # environment configuration
 │   │   ├── db/            # SQLite client, schema, seed
 │   │   ├── applications/  # bidder application drafts
+│   │   ├── documents/     # upload metadata and submission gate
 │   │   ├── routes/        # health, auth, bidder, tenders, requirements
 │   │   ├── tenders/       # tender repository and status
 │   │   ├── requirements/  # requirement constants and repository

@@ -13,6 +13,9 @@ const requirementColumns = db
   .prepare(`PRAGMA table_info(tender_requirements)`)
   .all() as Array<{ name: string }>;
 const applicationColumns = db.prepare(`PRAGMA table_info(applications)`).all() as Array<{ name: string }>;
+const documentColumns = db
+  .prepare(`PRAGMA table_info(application_documents)`)
+  .all() as Array<{ name: string }>;
 const userCount = db.prepare(`SELECT COUNT(*) AS count FROM users`).get() as { count: number };
 
 console.log(`SQLite database migrated at: ${db.name}`);
@@ -23,6 +26,9 @@ console.log(
 );
 console.log(
   `Application columns: ${applicationColumns.map((column) => column.name).join(", ") || "(missing)"}`
+);
+console.log(
+  `Document columns: ${documentColumns.map((column) => column.name).join(", ") || "(missing)"}`
 );
 console.log(`Existing users preserved: ${userCount.count}`);
 

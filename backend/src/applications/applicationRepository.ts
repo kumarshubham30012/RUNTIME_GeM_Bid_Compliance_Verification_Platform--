@@ -2,12 +2,15 @@ import { getDb } from "../db/client";
 import { findDatedTender, type PublicTender } from "../tenders/tenderRepository";
 
 export const APPLICATION_STATUS_DRAFT = "DRAFT";
+export const APPLICATION_STATUS_SUBMITTED = "SUBMITTED";
+
+export type ApplicationStatus = typeof APPLICATION_STATUS_DRAFT | typeof APPLICATION_STATUS_SUBMITTED;
 
 export type ApplicationRecord = {
   id: number;
   tenderId: number;
   bidderUserId: number;
-  status: typeof APPLICATION_STATUS_DRAFT;
+  status: ApplicationStatus;
   gstin: string;
   pan: string;
   oem: string;
@@ -33,12 +36,16 @@ const applicationSelect = `
   FROM applications
 `;
 
+function mapStatus(value: string): ApplicationStatus {
+  return value === APPLICATION_STATUS_SUBMITTED ? APPLICATION_STATUS_SUBMITTED : APPLICATION_STATUS_DRAFT;
+}
+
 function mapApplication(row: ApplicationRow): ApplicationRecord {
   return {
     id: row.id,
     tenderId: row.tender_id,
     bidderUserId: row.bidder_user_id,
-    status: APPLICATION_STATUS_DRAFT,
+    status: mapStatus(row.status),
     gstin: row.gstin,
     pan: row.pan,
     oem: row.oem,
@@ -115,10 +122,25 @@ export function updateDraftApplication(
   getDb()
     .prepare(
       `UPDATE applications
-       SET gstin = ?, pan = ?, oem = ?, status = ?, updated_at = datetime('now')
-       WHERE id = ? AND bidder_user_id = ?`
+       SET gstin = ?, pan = ?, oem = ?, updated_at = datetime('now')
+       WHERE id = ? AND bidder_user_id = ? AND status = ?`
     )
-    .run(gstin, pan, oem, APPLICATION_STATUS_DRAFT, applicationId, bidderUserId);
+    .run(gstin, pan, oem, applicationId, bidderUserId, APPLICATION_STATUS_DRAFT);
+
+  return findApplicationForBidder(applicationId, bidderUserId);
+}
+
+export function submitDraftApplication(
+  applicationId: number,
+  bidderUserId: number
+): ApplicationRecord | null {
+  getDb()
+    .prepare(
+      `UPDATE applications
+       SET status = ?, updated_at = datetime('now')
+       WHERE id = ? AND bidder_user_id = ? AND status = ?`
+    )
+    .run(APPLICATION_STATUS_SUBMITTED, applicationId, bidderUserId, APPLICATION_STATUS_DRAFT);
 
   return findApplicationForBidder(applicationId, bidderUserId);
 }

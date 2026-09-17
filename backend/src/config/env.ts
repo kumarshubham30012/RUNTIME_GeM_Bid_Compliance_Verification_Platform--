@@ -18,4 +18,5 @@ export const env = {
   databasePath: required("DATABASE_PATH", "./data/app.db"),
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: required("JWT_EXPIRES_IN", "8h"),
+  uploadDir: required("UPLOAD_DIR", "./uploads"),
 };
