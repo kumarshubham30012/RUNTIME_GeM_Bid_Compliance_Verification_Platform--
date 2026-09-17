@@ -5,6 +5,7 @@ import { getTender, type Tender } from "../api/tenders.ts";
 import { useAuth } from "../auth/AuthContext.tsx";
 import { AppShell } from "../components/AppShell.tsx";
 import { TenderMeta, TenderStatusBadge, placeholderStat } from "../components/tenderDisplay.tsx";
+import { RequirementBuilder } from "../components/RequirementBuilder.tsx";
 
 export function TenderDetailPage() {
   const { id } = useParams();
@@ -76,15 +77,10 @@ export function TenderDetailPage() {
           <p className="mt-6 text-sm text-slate-500">
             Created by {tender.createdByName} ({tender.createdByEmail}) on {tender.createdAt}
           </p>
-
-          <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6">
-            <h3 className="text-lg font-medium text-slate-900">Later phases</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Requirements and bidder data will be added in later phases.
-            </p>
-          </div>
         </section>
       ) : null}
+
+      {tender ? <RequirementBuilder token={state.token} tenderId={tender.id} /> : null}
     </AppShell>
   );
 }

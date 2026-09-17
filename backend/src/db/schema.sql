@@ -27,9 +27,13 @@ CREATE TABLE IF NOT EXISTS tenders (
 CREATE TABLE IF NOT EXISTS tender_requirements (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tender_id INTEGER NOT NULL REFERENCES tenders(id) ON DELETE CASCADE,
-  requirement_text TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  tender_clause TEXT NOT NULL DEFAULT '',
+  requirement_text TEXT NOT NULL DEFAULT '',
   category TEXT,
   is_mandatory INTEGER NOT NULL DEFAULT 1,
+  verification_method TEXT NOT NULL DEFAULT '',
+  rule_type TEXT NOT NULL DEFAULT '',
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

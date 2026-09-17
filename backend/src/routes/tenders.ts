@@ -7,10 +7,12 @@ import {
   findOfficerTender,
   listTendersForOfficer,
 } from "../tenders/tenderRepository";
+import { registerRequirementRoutes } from "./requirements";
 
 export const tendersRouter = Router();
 
 tendersRouter.use(requireAuth, requireRole("officer"));
+registerRequirementRoutes(tendersRouter);
 
 function readString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

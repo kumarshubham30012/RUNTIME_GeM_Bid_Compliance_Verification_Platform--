@@ -4,7 +4,9 @@ Phase 1 provides the project foundation: an Express + TypeScript backend, SQLite
 
 Phase 2 adds multi-role authentication (bidder, officer, admin), JWT-protected APIs, demo users, a login page, and three dashboard shells.
 
-Phase 3 adds officer-side tender management: create tenders, list the officer's tenders, view tender details, and display a date-derived status. Bidder applications, requirements, and reviews are not implemented yet.
+Phase 3 adds officer-side tender management: create tenders, list the officer's tenders, view tender details, and display a date-derived status.
+
+Phase 4 adds an officer requirement builder on each owned tender: name, tender clause, mandatory/optional, verification method, and rule type. Bidder-facing tender browsing is not implemented yet.
 
 ## Prerequisites
 
@@ -60,7 +62,7 @@ npm run db:init
 
 This creates `backend/data/app.db` (or the path in `DATABASE_PATH`) and applies the schema, including the `users` table used for authentication.
 
-Existing databases are updated in place with Phase 3 tender columns (`department`, `opening_date`, `closing_date`). Those `ALTER TABLE` steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
+Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Those `ALTER TABLE` steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
 
 ```bash
 npm run db:migrate
@@ -142,6 +144,10 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `GET` | `/api/tenders` | Officer role | List tenders created by the authenticated officer |
 | `POST` | `/api/tenders` | Officer role | Create a tender for the authenticated officer |
 | `GET` | `/api/tenders/:id` | Officer role | Get one of the officer's tenders |
+| `GET` | `/api/tenders/:id/requirements` | Officer role | List requirements for an owned tender |
+| `POST` | `/api/tenders/:id/requirements` | Officer role | Create a requirement for an owned tender |
+| `PATCH` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Update a requirement on an owned tender |
+| `DELETE` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Delete a requirement on an owned tender |
 
 Send the token as:
 
@@ -233,6 +239,30 @@ Frontend officer routes:
 
 The bidder dashboard does not include Create Tender. A bidder JWT still cannot create tenders through `POST /api/tenders`.
 
+## Requirement builder (Phase 4)
+
+Officers configure per-tender compliance requirements from the tender detail page. Requirements belong to a tender through `tender_id` and are isolated per tender. Ownership is taken from the authenticated officer and the tender row; the client cannot assign a requirement to another officer's tender.
+
+Requirement fields:
+
+- `name` (required)
+- `tenderClause` (required)
+- `mandatory` (required JSON boolean: `true` = MANDATORY, `false` = OPTIONAL)
+- `verificationMethod`: `DOCUMENT` \| `GST` \| `UDYAM` \| `OEM` \| `MANUAL`
+- `ruleType`: `EXISTS` \| `EXACT_MATCH` \| `MATCH` \| `MANUAL_REVIEW`
+
+These values are stored as configuration only. Phase 4 does not evaluate PASS/FAIL or run verification providers.
+
+Example:
+
+```bash
+curl -sS -X POST http://localhost:3001/api/tenders/$TENDER_ID/requirements \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"GST Registration","tenderClause":"Bidder must provide a valid GST registration certificate.","mandatory":true,"verificationMethod":"GST","ruleType":"EXISTS"}'
+```
+
+
 
 ### Role authorization
 
@@ -264,8 +294,9 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── auth/          # JWT, middleware, roles
 │   │   ├── config/        # environment configuration
 │   │   ├── db/            # SQLite client, schema, seed
-│   │   ├── routes/        # health, auth, role probes, tenders
+│   │   ├── routes/        # health, auth, role probes, tenders, requirements
 │   │   ├── tenders/       # tender repository and status
+│   │   ├── requirements/  # requirement constants and repository
 │   │   ├── users/         # user repository
 │   │   ├── app.ts
 │   │   └── index.ts
