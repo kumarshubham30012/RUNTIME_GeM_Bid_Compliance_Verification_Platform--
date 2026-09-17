@@ -19,6 +19,7 @@ import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
 import { VerificationCenter } from "../components/VerificationCenter.tsx";
 import { EntityResolutionCenter } from "../components/EntityResolutionCenter.tsx";
 import { ComplianceResults } from "../components/ComplianceResults.tsx";
+import { EvidenceFindings } from "../components/EvidenceFindings.tsx";
 
 export function BidderApplicationPage() {
   const { applicationId } = useParams();
@@ -379,6 +380,7 @@ export function BidderApplicationPage() {
           />
           <EntityResolutionCenter token={state.token} applicationId={application.id} />
           <ComplianceResults token={state.token} applicationId={application.id} />
+          <EvidenceFindings token={state.token} applicationId={application.id} />
         </>
       ) : null}
 

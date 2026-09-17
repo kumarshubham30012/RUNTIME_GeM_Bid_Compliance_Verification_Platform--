@@ -132,3 +132,22 @@ CREATE TABLE IF NOT EXISTS compliance_results (
 );
 
 CREATE INDEX IF NOT EXISTS idx_compliance_results_application_id ON compliance_results(application_id);
+
+CREATE TABLE IF NOT EXISTS evidence_findings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  requirement_id INTEGER NOT NULL REFERENCES tender_requirements(id) ON DELETE CASCADE,
+  requirement_name TEXT NOT NULL DEFAULT '',
+  tender_clause TEXT NOT NULL DEFAULT '',
+  compliance_status TEXT NOT NULL,
+  submitted_value TEXT NOT NULL DEFAULT '',
+  verified_value TEXT NOT NULL DEFAULT '',
+  evidence_sources TEXT NOT NULL DEFAULT '',
+  reasoning TEXT NOT NULL DEFAULT '',
+  generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (application_id, requirement_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_evidence_findings_application_id ON evidence_findings(application_id);

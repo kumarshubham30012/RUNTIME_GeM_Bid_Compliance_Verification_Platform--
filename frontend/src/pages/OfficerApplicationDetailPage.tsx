@@ -13,6 +13,7 @@ import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
 import { VerificationCenter } from "../components/VerificationCenter.tsx";
 import { EntityResolutionCenter } from "../components/EntityResolutionCenter.tsx";
 import { ComplianceResults } from "../components/ComplianceResults.tsx";
+import { EvidenceFindings } from "../components/EvidenceFindings.tsx";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
@@ -280,6 +281,7 @@ export function OfficerApplicationDetailPage() {
           />
           <EntityResolutionCenter token={state.token} applicationId={detail.application.id} />
           <ComplianceResults token={state.token} applicationId={detail.application.id} />
+          <EvidenceFindings token={state.token} applicationId={detail.application.id} />
         </>
       ) : null}
     </AppShell>
