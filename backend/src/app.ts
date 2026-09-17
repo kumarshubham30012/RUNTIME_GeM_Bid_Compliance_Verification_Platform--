@@ -9,6 +9,7 @@ import { tendersRouter } from "./routes/tenders";
 import { officerApplicationsRouter } from "./routes/officerApplications";
 import { verificationRouter } from "./routes/verification";
 import { entityResolutionRouter } from "./routes/entityResolution";
+import { complianceRouter } from "./routes/compliance";
 import { sendError } from "./http/errors";
 
 export function createApp() {
@@ -30,6 +31,7 @@ export function createApp() {
   app.use("/api/tenders", tendersRouter);
   app.use("/api/verification", verificationRouter);
   app.use("/api/entity-resolution", entityResolutionRouter);
+  app.use("/api/compliance", complianceRouter);
 
   app.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (res.headersSent) {
