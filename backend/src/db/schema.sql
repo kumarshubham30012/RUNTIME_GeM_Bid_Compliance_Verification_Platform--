@@ -13,8 +13,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS tenders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
+  department TEXT NOT NULL DEFAULT '',
   bid_number TEXT,
   description TEXT,
+  opening_date TEXT,
+  closing_date TEXT,
   status TEXT NOT NULL DEFAULT 'draft',
   created_by_user_id INTEGER REFERENCES users(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),

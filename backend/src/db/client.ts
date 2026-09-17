@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { env } from "../config/env";
+import { applySafeMigrations } from "./migrate";
 
 let db: Database.Database | null = null;
 
@@ -23,6 +24,7 @@ export function initializeDatabase(): Database.Database {
 
   const schemaSql = fs.readFileSync(resolveSchemaPath(), "utf8");
   connection.exec(schemaSql);
+  applySafeMigrations(connection);
 
   return connection;
 }

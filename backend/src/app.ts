@@ -4,6 +4,7 @@ import { env } from "./config/env";
 import { healthRouter } from "./routes/health";
 import { authRouter } from "./routes/auth";
 import { createRoleMeRouter } from "./routes/roleMe";
+import { tendersRouter } from "./routes/tenders";
 import { sendError } from "./http/errors";
 
 export function createApp() {
@@ -21,6 +22,7 @@ export function createApp() {
   app.use("/api/bidder", createRoleMeRouter("bidder"));
   app.use("/api/officer", createRoleMeRouter("officer"));
   app.use("/api/admin", createRoleMeRouter("admin"));
+  app.use("/api/tenders", tendersRouter);
 
   app.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (res.headersSent) {
