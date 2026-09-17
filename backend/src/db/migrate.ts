@@ -83,4 +83,28 @@ export function applySafeMigrations(db: Database.Database): void {
 
   db.exec(`CREATE INDEX IF NOT EXISTS idx_application_documents_application_id ON application_documents(application_id)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_application_documents_requirement_id ON application_documents(requirement_id)`);
+
+  if (hasTable(db, "applications") && !hasColumn(db, "applications", "udyam")) {
+    db.exec(`ALTER TABLE applications ADD COLUMN udyam TEXT NOT NULL DEFAULT ''`);
+  }
+
+  if (!hasTable(db, "verification_results")) {
+    db.exec(`
+      CREATE TABLE verification_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+        requirement_id INTEGER NOT NULL REFERENCES tender_requirements(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL,
+        environment TEXT NOT NULL DEFAULT 'SANDBOX',
+        status TEXT NOT NULL,
+        summary TEXT NOT NULL DEFAULT '',
+        result_json TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (application_id, requirement_id)
+      )
+    `);
+  }
+
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_verification_results_application_id ON verification_results(application_id)`);
 }

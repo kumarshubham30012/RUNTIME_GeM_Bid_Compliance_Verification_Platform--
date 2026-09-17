@@ -14,6 +14,8 @@ Phase 6 adds local document upload, a mandatory-document completeness gate, and 
 
 Phase 7 adds an officer application review workspace: officers can list applications on their own tenders, inspect submitted company details and requirement documents, and download those files through an authenticated API. It does not verify documents or produce PASS/FAIL.
 
+Phase 8 adds a SANDBOX verification center with local demo providers (GST, Udyam, OEM, document presence, and manual). It does not call government APIs and does not produce tender PASS/FAIL.
+
 ## Prerequisites
 
 - Node.js 20 or later
@@ -69,7 +71,7 @@ npm run db:init
 
 This creates `backend/data/app.db` (or the path in `DATABASE_PATH`) and applies the schema, including the `users` table used for authentication.
 
-Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Phase 6 adds `application_documents` if it is missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
+Existing databases are updated in place. Phase 3 adds tender columns (`department`, `opening_date`, `closing_date`). Phase 4 adds requirement columns (`name`, `tender_clause`, `verification_method`, `rule_type`). Phase 5 adds the `applications` table if it is missing. Phase 6 adds `application_documents` if it is missing. Phase 8 adds `applications.udyam` if missing and `verification_results` if missing. Those steps are idempotent and run from `db:init`, `db:migrate`, and backend startup. They do not drop tables or users.
 
 ```bash
 npm run db:migrate
@@ -152,7 +154,7 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `GET` | `/api/bidder/tenders/:tenderId` | Bidder role | Open tender detail and read-only requirements |
 | `POST` | `/api/bidder/tenders/:tenderId/application` | Bidder role | Create or return the bidder's DRAFT application |
 | `GET` | `/api/bidder/applications/:applicationId` | Bidder role | Get the bidder's own application |
-| `PATCH` | `/api/bidder/applications/:applicationId` | Bidder role | Save GSTIN, PAN, and OEM on a DRAFT |
+| `PATCH` | `/api/bidder/applications/:applicationId` | Bidder role | Save GSTIN, PAN, OEM, and Udyam on a DRAFT |
 | `GET` | `/api/tenders` | Officer role | List tenders created by the authenticated officer |
 | `POST` | `/api/tenders` | Officer role | Create a tender for the authenticated officer |
 | `GET` | `/api/tenders/:id` | Officer role | Get one of the officer's tenders |
@@ -163,6 +165,8 @@ Passwords are stored as bcrypt hashes. Password hashes are never returned by the
 | `POST` | `/api/tenders/:id/requirements` | Officer role | Create a requirement for an owned tender |
 | `PATCH` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Update a requirement on an owned tender |
 | `DELETE` | `/api/tenders/:id/requirements/:requirementId` | Officer role | Delete a requirement on an owned tender |
+| `GET` | `/api/verification/applications/:applicationId` | Bidder or officer | List persisted SANDBOX verification results for an owned application |
+| `POST` | `/api/verification/applications/:applicationId` | Bidder or officer | Run the sandbox provider for one requirement (`requirementId`) |
 
 Send the token as:
 
@@ -331,6 +335,32 @@ Frontend:
 | `/officer` | Tender list plus Applications / Bid Reviews |
 | `/officer/applications/:applicationId` | Application review |
 
+## Demo verification center (Phase 8)
+
+Phase 8 runs **local SANDBOX providers** only. It does **not** access GST, Udyam, or OEM government systems. A verification status of `VERIFIED` means a matching demo registry record (or document metadata) was found. It is **not** a tender PASS/FAIL decision.
+
+Providers:
+
+| Requirement `verification_method` | Provider |
+| --- | --- |
+| `GST` | `DemoGSTProvider` |
+| `UDYAM` | `DemoUdyamProvider` |
+| `OEM` | `DemoOEMProvider` |
+| `DOCUMENT` | `DemoDocumentProvider` (presence/metadata only) |
+| `MANUAL` | `DemoManualProvider` (`MANUAL_REVIEW`, no lookup) |
+
+Every result includes `environment: "SANDBOX"` and the provider name. Results are stored in `verification_results` (one latest row per application + requirement) so a page refresh does not rerun providers.
+
+Example demo identifiers (fictional):
+
+- GSTIN `27SANDBOX0001Z5`
+- Udyam `UDYAM-DEMO-00-0000001`
+- OEM `Sandbox Medical Devices`
+
+Unknown values return `NOT_FOUND`. Empty GSTIN/OEM/Udyam or no uploaded document returns `INSUFFICIENT_DATA`.
+
+Ownership: a bidder can only verify their own application; an officer can only verify applications on tenders they created. Admins receive `403`. Unauthenticated requests receive `401`.
+
 ### Role authorization
 
 `requireAuth` verifies the JWT and loads the user from the database.
@@ -365,7 +395,8 @@ Unauthenticated users are redirected to `/login`. An authenticated user who open
 │   │   ├── db/            # SQLite client, schema, seed
 │   │   ├── applications/  # bidder drafts and officer review queries
 │   │   ├── documents/     # upload metadata and submission gate
-│   │   ├── routes/        # health, auth, bidder, officer applications, tenders, requirements
+│   │   ├── verification/  # sandbox providers, demo registry, results
+│   │   ├── routes/        # health, auth, bidder, officer applications, tenders, requirements, verification
 │   │   ├── tenders/       # tender repository and status
 │   │   ├── requirements/  # requirement constants and repository
 │   │   ├── users/         # user repository

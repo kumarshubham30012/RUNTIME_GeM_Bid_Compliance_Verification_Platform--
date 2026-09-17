@@ -60,6 +60,7 @@ export type OfficerApplicationDetail = {
     gstin: string;
     pan: string;
     oem: string;
+    udyam: string;
     createdAt: string;
     updatedAt: string;
   };
@@ -89,6 +90,7 @@ type DetailRow = ListRow & {
   opening_date: string;
   closing_date: string;
   bidder_email: string;
+  udyam: string;
 };
 
 type RequirementRow = {
@@ -173,6 +175,7 @@ export function findApplicationForOfficer(
          a.gstin,
          a.pan,
          a.oem,
+         a.udyam,
          a.created_at,
          a.updated_at
        FROM applications a
@@ -215,6 +218,7 @@ export function findApplicationForOfficer(
       gstin: row.gstin,
       pan: row.pan,
       oem: row.oem,
+      udyam: row.udyam,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     },

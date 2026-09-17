@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS applications (
   gstin TEXT NOT NULL DEFAULT '',
   pan TEXT NOT NULL DEFAULT '',
   oem TEXT NOT NULL DEFAULT '',
+  udyam TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (tender_id, bidder_user_id)
@@ -83,3 +84,19 @@ CREATE TABLE IF NOT EXISTS application_documents (
 
 CREATE INDEX IF NOT EXISTS idx_application_documents_application_id ON application_documents(application_id);
 CREATE INDEX IF NOT EXISTS idx_application_documents_requirement_id ON application_documents(requirement_id);
+
+CREATE TABLE IF NOT EXISTS verification_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  requirement_id INTEGER NOT NULL REFERENCES tender_requirements(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  environment TEXT NOT NULL DEFAULT 'SANDBOX',
+  status TEXT NOT NULL,
+  summary TEXT NOT NULL DEFAULT '',
+  result_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (application_id, requirement_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_results_application_id ON verification_results(application_id);

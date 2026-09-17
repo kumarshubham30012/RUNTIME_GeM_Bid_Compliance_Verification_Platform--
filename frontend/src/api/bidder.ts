@@ -42,6 +42,7 @@ export type Application = {
   gstin: string;
   pan: string;
   oem: string;
+  udyam?: string;
   createdAt: string;
   updatedAt: string;
   tender: {
@@ -102,7 +103,7 @@ export async function getApplication(token: string, applicationId: number): Prom
 export async function saveApplicationDraft(
   token: string,
   applicationId: number,
-  input: { gstin: string; pan: string; oem: string }
+  input: { gstin: string; pan: string; oem: string; udyam?: string }
 ): Promise<Application> {
   const result = await apiRequest<{ application: Application }>(
     `/api/bidder/applications/${applicationId}`,

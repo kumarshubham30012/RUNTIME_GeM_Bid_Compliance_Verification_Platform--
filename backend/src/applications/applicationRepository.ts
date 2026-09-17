@@ -14,6 +14,7 @@ export type ApplicationRecord = {
   gstin: string;
   pan: string;
   oem: string;
+  udyam: string;
   createdAt: string;
   updatedAt: string;
   tender: PublicTender | null;
@@ -27,12 +28,13 @@ type ApplicationRow = {
   gstin: string;
   pan: string;
   oem: string;
+  udyam: string;
   created_at: string;
   updated_at: string;
 };
 
 const applicationSelect = `
-  SELECT id, tender_id, bidder_user_id, status, gstin, pan, oem, created_at, updated_at
+  SELECT id, tender_id, bidder_user_id, status, gstin, pan, oem, udyam, created_at, updated_at
   FROM applications
 `;
 
@@ -49,6 +51,7 @@ function mapApplication(row: ApplicationRow): ApplicationRecord {
     gstin: row.gstin,
     pan: row.pan,
     oem: row.oem,
+    udyam: row.udyam,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     tender: findDatedTender(row.tender_id),
@@ -73,6 +76,23 @@ export function findApplicationForBidder(
   const row = getDb()
     .prepare(`${applicationSelect} WHERE id = ? AND bidder_user_id = ? LIMIT 1`)
     .get(applicationId, bidderUserId) as ApplicationRow | undefined;
+
+  return row ? mapApplication(row) : null;
+}
+
+export function findApplicationOwnedByOfficer(
+  applicationId: number,
+  officerId: number
+): ApplicationRecord | null {
+  const row = getDb()
+    .prepare(
+      `SELECT a.id, a.tender_id, a.bidder_user_id, a.status, a.gstin, a.pan, a.oem, a.udyam, a.created_at, a.updated_at
+       FROM applications a
+       INNER JOIN tenders t ON t.id = a.tender_id
+       WHERE a.id = ? AND t.created_by_user_id = ?
+       LIMIT 1`
+    )
+    .get(applicationId, officerId) as ApplicationRow | undefined;
 
   return row ? mapApplication(row) : null;
 }
@@ -108,7 +128,7 @@ export function createDraftApplication(tenderId: number, bidderUserId: number): 
 export function updateDraftApplication(
   applicationId: number,
   bidderUserId: number,
-  fields: { gstin?: string; pan?: string; oem?: string }
+  fields: { gstin?: string; pan?: string; oem?: string; udyam?: string }
 ): ApplicationRecord | null {
   const existing = findApplicationForBidder(applicationId, bidderUserId);
   if (!existing) {
@@ -118,14 +138,15 @@ export function updateDraftApplication(
   const gstin = fields.gstin ?? existing.gstin;
   const pan = fields.pan ?? existing.pan;
   const oem = fields.oem ?? existing.oem;
+  const udyam = fields.udyam ?? existing.udyam;
 
   getDb()
     .prepare(
       `UPDATE applications
-       SET gstin = ?, pan = ?, oem = ?, updated_at = datetime('now')
+       SET gstin = ?, pan = ?, oem = ?, udyam = ?, updated_at = datetime('now')
        WHERE id = ? AND bidder_user_id = ? AND status = ?`
     )
-    .run(gstin, pan, oem, applicationId, bidderUserId, APPLICATION_STATUS_DRAFT);
+    .run(gstin, pan, oem, udyam, applicationId, bidderUserId, APPLICATION_STATUS_DRAFT);
 
   return findApplicationForBidder(applicationId, bidderUserId);
 }

@@ -16,6 +16,9 @@ const applicationColumns = db.prepare(`PRAGMA table_info(applications)`).all() a
 const documentColumns = db
   .prepare(`PRAGMA table_info(application_documents)`)
   .all() as Array<{ name: string }>;
+const verificationColumns = db
+  .prepare(`PRAGMA table_info(verification_results)`)
+  .all() as Array<{ name: string }>;
 const userCount = db.prepare(`SELECT COUNT(*) AS count FROM users`).get() as { count: number };
 
 console.log(`SQLite database migrated at: ${db.name}`);
@@ -29,6 +32,9 @@ console.log(
 );
 console.log(
   `Document columns: ${documentColumns.map((column) => column.name).join(", ") || "(missing)"}`
+);
+console.log(
+  `Verification columns: ${verificationColumns.map((column) => column.name).join(", ") || "(missing)"}`
 );
 console.log(`Existing users preserved: ${userCount.count}`);
 

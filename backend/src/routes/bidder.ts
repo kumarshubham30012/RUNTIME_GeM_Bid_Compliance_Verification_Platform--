@@ -173,13 +173,14 @@ bidderRouter.patch("/applications/:applicationId", (req, res) => {
   const gstin = readOptionalString(body, "gstin");
   const pan = readOptionalString(body, "pan");
   const oem = readOptionalString(body, "oem");
+  const udyam = readOptionalString(body, "udyam");
 
-  if (gstin === "invalid" || pan === "invalid" || oem === "invalid") {
-    sendError(res, 400, "GSTIN, PAN, and OEM must be strings");
+  if (gstin === "invalid" || pan === "invalid" || oem === "invalid" || udyam === "invalid") {
+    sendError(res, 400, "GSTIN, PAN, OEM, and Udyam must be strings");
     return;
   }
 
-  if (gstin === undefined && pan === undefined && oem === undefined) {
+  if (gstin === undefined && pan === undefined && oem === undefined && udyam === undefined) {
     sendError(res, 400, "No updatable fields were provided");
     return;
   }
@@ -188,6 +189,7 @@ bidderRouter.patch("/applications/:applicationId", (req, res) => {
     ...(gstin !== undefined ? { gstin } : {}),
     ...(pan !== undefined ? { pan } : {}),
     ...(oem !== undefined ? { oem } : {}),
+    ...(udyam !== undefined ? { udyam } : {}),
   });
 
   if (!application || application.status !== APPLICATION_STATUS_DRAFT) {

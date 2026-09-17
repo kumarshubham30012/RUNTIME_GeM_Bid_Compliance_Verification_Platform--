@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../auth/AuthContext.tsx";
 import { AppShell } from "../components/AppShell.tsx";
 import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
+import { VerificationCenter } from "../components/VerificationCenter.tsx";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
@@ -206,6 +207,10 @@ export function OfficerApplicationDetailPage() {
                 <dt className="text-xs uppercase tracking-wide text-slate-500">OEM</dt>
                 <dd className="mt-1 text-slate-900">{detail.application.oem || "—"}</dd>
               </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Udyam (demo)</dt>
+                <dd className="mt-1 text-slate-900">{detail.application.udyam || "—"}</dd>
+              </div>
             </dl>
           </section>
 
@@ -265,6 +270,12 @@ export function OfficerApplicationDetailPage() {
               </ul>
             )}
           </section>
+
+          <VerificationCenter
+            token={state.token}
+            applicationId={detail.application.id}
+            requirements={detail.requirements}
+          />
         </>
       ) : null}
     </AppShell>

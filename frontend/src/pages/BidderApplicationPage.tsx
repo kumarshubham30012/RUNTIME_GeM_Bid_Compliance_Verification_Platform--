@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../auth/AuthContext.tsx";
 import { AppShell } from "../components/AppShell.tsx";
 import { TenderStatusBadge } from "../components/tenderDisplay.tsx";
+import { VerificationCenter } from "../components/VerificationCenter.tsx";
 
 export function BidderApplicationPage() {
   const { applicationId } = useParams();
@@ -26,6 +27,7 @@ export function BidderApplicationPage() {
   const [gstin, setGstin] = useState("");
   const [pan, setPan] = useState("");
   const [oem, setOem] = useState("");
+  const [udyam, setUdyam] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,7 @@ export function BidderApplicationPage() {
     setGstin(app.gstin);
     setPan(app.pan);
     setOem(app.oem);
+    setUdyam(app.udyam ?? "");
     setRequirements(reqs);
     setSubmission(status);
   }
@@ -101,7 +104,7 @@ export function BidderApplicationPage() {
     setSuccess(null);
 
     try {
-      const saved = await saveApplicationDraft(state.token, application.id, { gstin, pan, oem });
+      const saved = await saveApplicationDraft(state.token, application.id, { gstin, pan, oem, udyam });
       setApplication(saved);
       setSuccess("Draft saved.");
     } catch (caught) {
@@ -269,6 +272,15 @@ export function BidderApplicationPage() {
                 disabled={!isDraft}
               />
             </label>
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Udyam number (sandbox)</span>
+              <input
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500 disabled:bg-slate-100"
+                value={udyam}
+                onChange={(event) => setUdyam(event.target.value)}
+                disabled={!isDraft}
+              />
+            </label>
             {isDraft ? (
               <button
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
@@ -354,6 +366,14 @@ export function BidderApplicationPage() {
             </ul>
           )}
         </section>
+      ) : null}
+
+      {application && state.status === "authenticated" ? (
+        <VerificationCenter
+          token={state.token}
+          applicationId={application.id}
+          requirements={requirements}
+        />
       ) : null}
 
       {application ? (

@@ -62,6 +62,7 @@ export type OfficerApplicationDetail = {
     gstin: string;
     pan: string;
     oem: string;
+    udyam?: string;
     createdAt: string;
     updatedAt: string;
   };
