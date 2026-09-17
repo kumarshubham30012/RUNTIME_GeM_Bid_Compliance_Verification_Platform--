@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.DS_Store
+*.log
+npm-debug.log*
+
+# SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backend/data/*
+!backend/data/.gitkeep
